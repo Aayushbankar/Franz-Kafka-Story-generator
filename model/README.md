@@ -2,6 +2,12 @@
 
 A fine-tuned GPT-2 model trained to generate Kafka-style stories, capturing the essence of Franz Kafka's unique writing style, existential themes, and surreal narratives.
 
+## Model Availability
+
+This model is now available on Hugging Face at: [bankar404/kafka-gpt2-story-generator](https://huggingface.co/bankar404/kafka-gpt2-story-generator)
+
+You can download and use the model directly from Hugging Face using the transformers library.
+
 ## Model Description
 
 This model is a fine-tuned version of GPT-2, specifically trained on Franz Kafka's complete works to generate stories that mimic his distinctive writing style. The model captures key elements of Kafka's writing, including:
@@ -16,6 +22,7 @@ This model is a fine-tuned version of GPT-2, specifically trained on Franz Kafka
 - **Language:** English
 - **License:** MIT
 - **Fine-tuned from:** GPT-2
+- **Repository:** [bankar404/kafka-gpt2-story-generator](https://huggingface.co/bankar404/kafka-gpt2-story-generator)
 
 ## Intended Use
 
@@ -108,7 +115,7 @@ This model should be used responsibly:
 If you use this model in your research or work, please cite:
 ```bibtex
 @misc{kafka-gpt2-story-generator,
-  author = {Your Name},
+  author = {Bankar404},
   title = {Kafka GPT-2 Story Generator},
   year = {2024},
   publisher = {Hugging Face},
@@ -125,9 +132,9 @@ This model is licensed under the MIT License. See the LICENSE file for details.
 
 - Franz Kafka for his literary works
 - OpenAI for the GPT-2 model
-- Hugging Face for the transformers library
+- Hugging Face for the transformers library and model hosting
 - The open-source community for their contributions
 
 ## Contact
 
-For questions or feedback about this model, please open an issue on the Hugging Face repository. 
+For questions or feedback about this model, please open an issue on the [Hugging Face repository](https://huggingface.co/bankar404/kafka-gpt2-story-generator). 
