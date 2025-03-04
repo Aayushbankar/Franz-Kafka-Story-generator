@@ -22,7 +22,8 @@ project/
 │   ├── special_tokens_map.json
 │   ├── vocab.json
 │   ├── generation_config.json
-│   └── merges.txt
+│   ├── merges.txt
+│   └── README.md         # Model documentation
 ├── static/               # Static assets
 │   ├── css/             # Stylesheets
 │   ├── js/              # JavaScript files
@@ -41,9 +42,9 @@ pip install -r requirements.txt
 ```
 
 2. Download the model files:
-   - Due to size limitations, model files are not included in this repository
-   - You can download the required files from [link to your chosen hosting service]
-   - Place all downloaded files in the `model/` directory
+   - The model is now available on Hugging Face at [bankar404/kafka-gpt2-story-generator](https://huggingface.co/bankar404/kafka-gpt2-story-generator)
+   - You can download the model directly using the transformers library
+   - For detailed model information, see [model/README.md](model/README.md)
 
 3. Run the application:
 ```bash
@@ -54,15 +55,15 @@ python app.py
 Create a `.env` file with the following variables:
 - Add your required environment variables here
 
-## Model Files
-This project uses a fine-tuned GPT-2 model. The model files are not included in this repository due to size limitations. You have two options to get the model:
+## Model Information
+The project uses a fine-tuned GPT-2 model trained on Kafka's works. For detailed information about the model, including:
+- Model architecture and capabilities
+- Training data and methodology
+- Usage examples and parameters
+- Performance characteristics
+- Ethical considerations
 
-1. Download pre-trained model files:
-   - [Add link to where you'll host the model files]
-   - Place the downloaded files in the `model/` directory
-
-2. Train your own model:
-   - [Add instructions if you want to include how to train the model]
+Please refer to the [model documentation](model/README.md) or visit the [Hugging Face repository](https://huggingface.co/bankar404/kafka-gpt2-story-generator).
 
 ## Audio Files
 - Audio files are generated on-demand when users request text-to-speech
@@ -71,4 +72,4 @@ This project uses a fine-tuned GPT-2 model. The model files are not included in 
 - Audio files are not included in version control
 
 ## Note
-Make sure to download all required model files before running the application. The total size of model files is approximately 477MB.
+The model is now hosted on Hugging Face and can be downloaded directly using the transformers library. No manual download of model files is required.
