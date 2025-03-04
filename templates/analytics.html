@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Story Analytics</title>
+    <!-- Use Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .analytics-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            margin: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        h2 {
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .reading-tracker {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .reading-tracker h3 {
+            color: #2c3e50;
+        }
+        .reading-tracker form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Space between form elements */
+        }
+        .reading-tracker input {
+            padding: 10px;
+            border: 2px solid #2c3e50;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .action-btn {
+            padding: 10px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .action-btn:hover {
+            background-color: #c0392b;
+        }
+        .metric-card {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .theme-bar {
+            margin: 10px 0;
+        }
+        .complexity-gauge, .style-match {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .gauge-label, .match-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .progress {
+            height: 20px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="analytics-container">
+        <h1>Story Analytics Dashboard</h1>
+        
+        <div class="stat-card">
+            <h2>Total Stories Generated</h2>
+            <p class="stat-value">{{ analytics.story_count }}</p>
+        </div>
+        
+        <div class="stat-card">
+            <h2>Average Story Length</h2>
+            <p class="stat-value">{{ analytics.avg_length|round|int }} words</p>
+        </div>
+        
+        <div class="stat-card">
+            <h2>Popular Genres</h2>
+            <div class="chart-container">
+                <canvas id="genreChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <h2>Reading Tracker</h2>
+            <ul id="reading-tracker">
+                {% for book in analytics.reading_tracker %}
+                <li>
+                    <strong>{{ book.title }}</strong> by {{ book.author }} - 
+                    {{ book.pages }} pages, {{ book.time_spent }} minutes read
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="reading-tracker">
+            <h3>Add to Reading Tracker</h3>
+            <form id="reading-form" method="post" action="/add-reading">
+                <input type="text" name="book_title" placeholder="Book Title" required>
+                <input type="text" name="author" placeholder="Author" required>
+                <input type="number" name="pages" placeholder="Total Pages" required>
+                <input type="number" name="time_spent" placeholder="Time Spent (minutes)" required>
+                <button type="submit" class="action-btn">Add Book</button>
+            </form>
+        </div>
+
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-dark text-white">
+                            <h3>Literary Quality Dashboard</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="metric-card">
+                                        <h4>Kafka Meter</h4>
+                                        <div class="progress">
+                                            <div id="kafkaMeter" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="metric-card">
+                                        <h4>Theme Analysis</h4>
+                                        <div id="themeChart"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="metric-card">
+                                        <h4>Story Complexity</h4>
+                                        <div id="complexityMeter"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="metric-card">
+                                        <h4>Style Match</h4>
+                                        <div id="styleMatch"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get server-side data
+        const analyticsData = {
+            genreLabels: {{ analytics.genre_counts.keys()|list|tojson }},
+            genreValues: {{ analytics.genre_counts.values()|list }},
+            {% if latest_metrics %}
+            literaryMetrics: {
+                kafkaScore: {{ latest_metrics.kafka_score }},
+                themePresence: {{ latest_metrics.theme_presence|tojson }},
+                complexity: {{ "%.1f"|format(latest_metrics.complexity) }},
+                styleMatch: {{ "%.1f"|format(latest_metrics.style_match) }}
+            }
+            {% else %}
+            literaryMetrics: null
+            {% endif %}
+        };
+
+        // Create genre chart
+        const ctx = document.getElementById('genreChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: analyticsData.genreLabels,
+                datasets: [{
+                    label: 'Stories per Genre',
+                    data: analyticsData.genreValues,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 206, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Initialize literary metrics
+        if (analyticsData.literaryMetrics) {
+            // Update Kafka Meter
+            document.getElementById('kafkaMeter').style.width = analyticsData.literaryMetrics.kafkaScore + '%';
+            
+            // Update Theme Chart
+            const themeHtml = Object.entries(analyticsData.literaryMetrics.themePresence)
+                .map(([theme, value]) => `
+                    <div class="theme-bar">
+                        <label>${theme}</label>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: ${value}%"></div>
+                        </div>
+                    </div>
+                `).join('');
+            document.getElementById('themeChart').innerHTML = themeHtml;
+            
+            // Update Complexity Meter
+            document.getElementById('complexityMeter').innerHTML = `
+                <div class="complexity-gauge">
+                    <div class="gauge-value">${analyticsData.literaryMetrics.complexity}%</div>
+                    <div class="gauge-label">Narrative Complexity</div>
+                </div>
+            `;
+            
+            // Update Style Match
+            document.getElementById('styleMatch').innerHTML = `
+                <div class="style-match">
+                    <div class="match-value">${analyticsData.literaryMetrics.styleMatch}%</div>
+                    <div class="match-label">Kafka Style Match</div>
+                </div>
+            `;
+        }
+
+        // Reading tracker form submission
+        document.getElementById('reading-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('/add-reading', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html> 

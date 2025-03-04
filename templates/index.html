@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafka's Tale Weaver</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Theme Variables */
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --bg-color: #f5f6fa;
+            --text-color: #2c3e50;
+            --card-bg: white;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --hover-color: #34495e;
+            --transition: all 0.3s ease;
+        }
+
+        /* Dark Theme */
+        [data-theme="dark"] {
+            --primary-color: #bb86fc;
+            --accent-color: #03dac6;
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --hover-color: #9d4edd;
+        }
+
+        /* Cyberpunk Theme */
+        [data-theme="cyberpunk"] {
+            --primary-color: #f0f;
+            --accent-color: #0ff;
+            --bg-color: #000;
+            --text-color: #fff;
+            --card-bg: #1a1a1a;
+            --shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+            --hover-color: #f0f;
+        }
+
+        /* Base Styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            transition: var(--transition);
+        }
+
+        /* Theme Switcher */
+        .theme-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .theme-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .theme-btn.active {
+            background: var(--accent-color);
+            color: var(--card-bg);
+        }
+
+        .theme-btn:hover {
+            background: var(--hover-color);
+            color: white;
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            padding: 0 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sidebar {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            height: fit-content;
+        }
+
+        .main-content {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Enhanced Animations */
+        @keyframes glowingBorder {
+            0% { border-color: var(--primary-color); }
+            50% { border-color: var(--accent-color); }
+            100% { border-color: var(--primary-color); }
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--card-bg);
+            color: var(--text-color);
+            transition: var(--transition);
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.2);
+        }
+
+        /* Story Display */
+        .story-container {
+            position: relative;
+            overflow: hidden;
+            margin-top: 2rem;
+            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .story-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        /* Enhanced Buttons */
+        .action-btn {
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Audio Player Styling */
+        .audio-player {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        /* Loading Effects */
+        .loading-wave {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .loading-wave div {
+            width: 4px;
+            height: 20px;
+            background: var(--accent-color);
+            animation: wave 1s infinite ease-in-out;
+        }
+
+        .loading-wave div:nth-child(2) { animation-delay: 0.1s; }
+        .loading-wave div:nth-child(3) { animation-delay: 0.2s; }
+        .loading-wave div:nth-child(4) { animation-delay: 0.3s; }
+
+        @keyframes wave {
+            0%, 40%, 100% { transform: scaleY(0.4); }
+            20% { transform: scaleY(1); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .chat-container {
+                padding: 1rem;
+            }
+
+            .theme-switcher {
+                position: static;
+                margin-bottom: 1rem;
+                justify-content: center;
+            }
+        }
+
+        .voice-select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid var(--primary-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
+        .voice-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .voice-settings label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .voice-settings input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-color);
+        }
+
+        .preview-btn {
+            background: var(--accent-color);
+            padding: 0.5rem 1rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Switcher -->
+    <div class="theme-switcher">
+        <button class="theme-btn active" data-theme="light">Light</button>
+        <button class="theme-btn" data-theme="dark">Dark</button>
+        <button class="theme-btn" data-theme="cyberpunk">Cyberpunk</button>
+    </div>
+
+    <div class="chat-container">
+        <aside class="sidebar">
+            <h2>Story Settings</h2>
+            <div class="settings-group">
+                <h3>Narrator Voice</h3>
+                <select id="voice-select" class="voice-select">
+                    <option value="en">English</option>
+                    <option value="en-au">English (Australian)</option>
+                    <option value="en-uk">English (British)</option>
+                    <option value="en-us">English (American)</option>
+                </select>
+
+                <div class="voice-settings">
+                    <label>
+                        Reading Speed
+                        <select id="speed" class="voice-select">
+                            <option value="false">Normal Speed</option>
+                            <option value="true">Slow & Clear</option>
+                        </select>
+                    </label>
+                </div>
+
+                <button class="action-btn preview-btn" onclick="previewVoice()">
+                    <i class="fas fa-play"></i>
+                    Preview Voice
+                </button>
+            </div>
+
+            <div class="story-controls">
+                <h3>Story Settings</h3>
+                <select id="genre">
+                    <option value="horror">Horror</option>
+                    <option value="surreal">Surreal</option>
+                    <option value="philosophical">Philosophical</option>
+                </select>
+                
+                <h3>Story Length</h3>
+                <select id="length">
+                    <option value="short">Short (~500 words)</option>
+                    <option value="medium">Medium (~1000 words)</option>
+                    <option value="long">Long (~2000 words)</option>
+                </select>
+
+                <h3>Mood</h3>
+                <div class="mood-slider">
+                    <input type="range" id="darkness" min="0" max="100">
+                    <label>Light → Dark</label>
+                </div>
+
+                <button onclick="generateImage()">Generate Scene Image</button>
+            </div>
+
+            <div class="collaboration">
+                <button onclick="shareStory()" class="action-btn">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+                <button onclick="exportStory()" class="action-btn">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <select id="export-format" style="margin-left: 10px; padding: 8px; border-radius: 5px;">
+                    <option value="txt">Text (.txt)</option>
+                    <option value="pdf">PDF (.pdf)</option>
+                    <option value="md">Markdown (.md)</option>
+                </select>
+            </div>
+
+            <!-- Link to Analytics Page -->
+            <div class="analytics-link">
+                <a href="/analytics" class="action-btn">
+                    <i class="fas fa-chart-line"></i>
+                    View Analytics
+                </a>
+            </div>
+
+        </aside>
+
+        <main class="main-content">
+            <h1> Franz Kafka's Tale Weaver</h1>
+            
+            <form method="post" class="prompt-form">
+                <textarea 
+                    name="prompt" 
+                    required 
+                    placeholder="Enter your story prompt here..."
+                ></textarea>
+                <button type="submit" class="action-btn">
+                    <i class="fas fa-magic"></i>
+                    Weave Story
+                    <div class="loading-wave" style="display: none;">
+                        <div></div><div></div><div></div><div></div>
+                    </div>
+                </button>
+            </form>
+
+            {% if generated_text %}
+            <div class="story-container">
+                <h2>Your Kafka-Inspired Tale</h2>
+                <div class="story-content">
+                    {{ generated_text|safe }}
+                </div>
+                
+                <div class="audio-player">
+                    <button class="action-btn" onclick="generateNarration()">
+                        <i class="fas fa-microphone"></i>
+                        Listen to Story
+                        <div class="loading-wave" style="display: none;">
+                            <div></div><div></div><div></div><div></div>
+                        </div>
+                    </button>
+                    <audio id="audioPlayer" controls style="display: none;"></audio>
+                </div>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <script>
+        // Theme Switching
+        const themeButtons = document.querySelectorAll('.theme-btn');
+        themeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.body.setAttribute('data-theme', btn.dataset.theme);
+                themeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                localStorage.setItem('preferred-theme', btn.dataset.theme);
+            });
+        });
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('preferred-theme');
+        if (savedTheme) {
+            document.body.setAttribute('data-theme', savedTheme);
+            themeButtons.forEach(btn => {
+                if (btn.dataset.theme === savedTheme) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Form submission handling
+        document.querySelector('form').addEventListener('submit', function() {
+            const loadingWave = this.querySelector('.loading-wave');
+            const submitBtn = this.querySelector('.action-btn');
+            loadingWave.style.display = 'inline-flex';
+            submitBtn.disabled = true;
+        });
+
+        // Narration generation
+        function generateNarration() {
+            const btn = document.querySelector('.audio-player .action-btn');
+            const loadingWave = btn.querySelector('.loading-wave');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const text = `{{ generated_text|safe }}`.replace(/<br>/g, '\n');
+            
+            const voiceId = document.getElementById('voice-select').value;
+            const speed = document.getElementById('speed').value;
+            
+            btn.disabled = true;
+            loadingWave.style.display = 'inline-flex';
+            audioPlayer.style.display = 'none';
+            
+            fetch('/generate-audio', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: text,
+                    lang: voiceId,
+                    slow: speed === 'true'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.audio_url) {
+                    audioPlayer.src = data.audio_url;
+                    audioPlayer.style.display = 'block';
+                    audioPlayer.play();
+                }
+            })
+            .catch(error => {
+                alert('Error generating narration: ' + error.message);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                loadingWave.style.display = 'none';
+            });
+        }
+
+        function previewVoice() {
+            const text = "This is a preview of the selected voice.";
+            const voiceId = document.getElementById('voice-select').value;
+            const speed = document.getElementById('speed').value;
+            
+            fetch('/generate-audio', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: text,
+                    lang: voiceId,
+                    slow: speed === 'true'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.audio_url) {
+                    const audio = new Audio(data.audio_url);
+                    audio.play();
+                }
+            })
+            .catch(error => {
+                alert('Error previewing voice: ' + error.message);
+            });
+        }
+
+        function updatePrompt() {
+            const genre = document.getElementById('genre').value;
+            const length = document.getElementById('length').value;
+            const darkness = document.getElementById('darkness').value;
+            const basePrompt = document.querySelector('textarea[name="prompt"]').value;
+
+            // Enhance the prompt with selected parameters
+            const enhancedPrompt = `Generate a ${length} ${genre} story with a darkness level of ${darkness}%: ${basePrompt}`;
+            
+            // Update hidden input with enhanced prompt
+            document.getElementById('enhanced-prompt').value = enhancedPrompt;
+        }
+
+        // Add event listeners to all controls
+        document.getElementById('genre').addEventListener('change', updatePrompt);
+        document.getElementById('length').addEventListener('change', updatePrompt);
+        document.getElementById('darkness').addEventListener('input', updatePrompt);
+
+        // Share story function
+        async function shareStory() {
+            const storyContent = document.querySelector('.story-content');
+            if (!storyContent) {
+                showNotification('No story to copy!', 'error');
+                return;
+            }
+
+            const story = storyContent.innerText;
+            
+            try {
+                await navigator.clipboard.writeText(story);
+                showNotification('Story copied to clipboard!', 'success');
+            } catch (err) {
+                console.error('Clipboard API failed:', err);
+                // Fallback method
+                const textarea = document.createElement('textarea');
+                textarea.value = story;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = 0;
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    showNotification('Story copied to clipboard!', 'success');
+                } catch (err) {
+                    showNotification('Failed to copy. Please select and copy the text manually.', 'error');
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+            }
+        }
+
+        // Add notification system
+        function showNotification(message, type = 'success') {
+            // Remove existing notification if any
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 5px;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+            `;
+
+            // Set background color based on type
+            if (type === 'success') {
+                notification.style.background = '#2ecc71';
+            } else if (type === 'error') {
+                notification.style.background = '#e74c3c';
+            }
+
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Add animation keyframes
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Export story function
+        function exportStory() {
+            const storyContent = document.querySelector('.story-content');
+            if (!storyContent) {
+                alert('No story to export!');
+                return;
+            }
+
+            const story = storyContent.innerText;
+            const format = document.getElementById('export-format').value;
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `kafka_story_${timestamp}`;
+
+            // For text format, create and download directly in browser
+            if (format === 'txt') {
+                const blob = new Blob([story], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${filename}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                return;
+            }
+
+            // For other formats, send to server
+            fetch('/export-story', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    story: story,
+                    format: format,
+                    filename: filename
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                }
+                throw new Error('Export failed');
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${filename}.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                alert('Failed to export story. Please try again.');
+            });
+        }
+    </script>
+</body>
+</html> 
